@@ -9,6 +9,8 @@ const port = 3000;
 const mongoUrl = "mongodb://localhost:27017/budget";
 
 app.use(cors());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 app.get("/hello", (req, res) => {
   res.send("Hello World!");
@@ -31,6 +33,35 @@ app.get("/budget", (req, res) => {
         })
         .catch((err) => {
           console.log(err);
+          res.status(400).send();
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
+
+app.post("/budget", (req, res) => {
+  // Connect to the mongo database
+  mongoose
+    .connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => {
+      // Add to the database based on req
+      let newBudgetItem = new budgetItemsModel({
+        title: req.body.title,
+        value: req.body.value,
+        color: req.body.color,
+      });
+
+      budgetItemsModel
+        .insertMany(newBudgetItem)
+        .then((data) => {
+          res.json(data);
+          mongoose.connection.close();
+        })
+        .catch((err) => {
+          console.log(err);
+          res.status(400).send();
         });
     })
     .catch((err) => {
